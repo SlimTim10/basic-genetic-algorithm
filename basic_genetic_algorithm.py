@@ -4,7 +4,6 @@
 # So, given the target number 23, the sequence 6+5*4/2+1 would be one possible solution.
 
 import random
-import sys
 import operator
 
 character_list = {
@@ -38,6 +37,53 @@ class Chromosome:
         self.equation = ''
         self.result = 0.0
 
+    # Decode the body of the chromosome into an equation
+    def decode(self):
+        # Split chromosome into character groups
+        genes = [self.body[i:i+4] for i in range(0, len(self.body), 4)]
+        prev_gene = ''
+        self.equation = ''
+
+        for gene in genes:
+            # Catch invalid genes
+            try:
+                gene = character_list[gene]
+            except:
+                continue
+            
+            # Alternate numbers and operators
+            if prev_gene.isdigit() != gene.isdigit():
+                self.equation += gene
+            else:
+                continue
+            
+            prev_gene = gene
+
+        # Don't let equations end with operator
+        if not self.equation[-1].isdigit():
+            self.equation = self.equation[:-1]
+
+    # Return the result of the equation (don't use operator precedence)
+    def get_result(self):
+        result = float(self.equation[0])
+        i = 1
+        while i < len(self.equation) - 1:
+            n = int(self.equation[i + 1])
+            if self.equation[i] == '+':
+                result += n
+            if self.equation[i] == '-':
+                result -= n
+            if self.equation[i] == '*':
+                result *= n
+            if self.equation[i] == '/':
+                # Catch divide by zero errors
+                try:
+                    result /= n
+                except:
+                    pass
+            i += 2
+        return result
+
 # Return n random chromosomes each of length chromo_length
 def generate_random_chromosomes(n, chromo_length):
     chromos = []
@@ -50,26 +96,6 @@ def generate_random_chromosomes(n, chromo_length):
         chromos.append(Chromosome(tmp))
         
     return chromos
-
-# Return the result of an equation (don't use operator precedence)
-def get_result(equation):
-    result = float(equation[0])
-    i = 1
-    while i < len(equation) - 1:
-        n = int(equation[i + 1])
-        if equation[i] == '+':
-            result += n
-        if equation[i] == '-':
-            result -= n
-        if equation[i] == '*':
-            result *= n
-        if equation[i] == '/':
-            try:
-                result /= n
-            except:
-                pass
-        i += 2
-    return result
 
 # Return a randomly selected chromosome based on roulette wheel selection
 def roulette_select(chromosomes, total_fitness):
@@ -108,38 +134,21 @@ def mutate(chromo):
 
 chromosomes = generate_random_chromosomes(population, chromosome_length)
 
+done = False
 generation = 0
-while True:
+while not done:
     
     total_fitness = 0.0
     
     for index, chromo in enumerate(chromosomes):
-        # Split chromosome into character groups
-        chars = [chromo.body[i:i+4] for i in range(0, len(chromo.body), 4)]
-        prev_char = ''
-        chromo.equation = ''
+        chromo.decode()
 
-        for char in chars:
-            try:
-                char = character_list[char]
-            except:
-                char = ''
-                # Alternate numbers and operators
-            if prev_char.isdigit() != char.isdigit():
-                chromo.equation += char
-            else:
-                continue
-            prev_char = char
-
-        # Don't let equations end with operator
-        if not chromo.equation[-1].isdigit():
-            chromo.equation = chromo.equation[:-1]
-
-        chromo.result = 0
-        try:
-            chromo.result = get_result(chromo.equation)
-        except:
-            chromo.result = 0
+        chromo.result = chromo.get_result()
+        # chromo.result = 0
+        # try:
+        #     chromo.result = chromo.get_result()
+        # except:
+        #     chromo.result = 0
 
         if int(chromo.result) == target:
             print('Found a solution!')
@@ -147,7 +156,8 @@ while True:
             print('Equation:', chromo.equation)
             print('Result:', chromo.result)
             print('Fitness score:', chromo.fitness)
-            sys.exit(0)
+            done = True
+            break
 
         chromo.fitness = abs(1.0 / (target - chromo.result))
         total_fitness += chromo.fitness
