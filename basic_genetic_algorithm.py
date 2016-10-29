@@ -144,11 +144,6 @@ while not done:
         chromo.decode()
 
         chromo.result = chromo.get_result()
-        # chromo.result = 0
-        # try:
-        #     chromo.result = chromo.get_result()
-        # except:
-        #     chromo.result = 0
 
         if int(chromo.result) == target:
             print('Found a solution!')
