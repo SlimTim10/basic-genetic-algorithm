@@ -22,7 +22,13 @@ character_list = {
     '1100': '*',
     '1101': '/' }
 
-target = 42
+while True:
+    try:
+        target = int(input('Enter a target number: '))
+        break
+    except:
+        continue
+
 population = 300
 chromosome_length = 100
 crossover_rate = 0.7
