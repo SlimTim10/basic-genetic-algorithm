@@ -24,9 +24,10 @@ character_list = {
 
 target = 42
 population = 300
-chromosome_length = 50
+chromosome_length = 100
 crossover_rate = 0.7
 mutation_rate = 0.001
+max_generations = 50
 
 random.seed(1)
 
@@ -101,10 +102,12 @@ def generate_random_chromosomes(n, chromo_length):
 def roulette_select(chromosomes, total_fitness):
     roll = random.random() * total_fitness
     f = 0.0
+
     for chromo in chromosomes:
         f += chromo.fitness
         if f > roll:
             return chromo
+        
     return chromosomes[-1]
 
 # Crossover two chromosomes based on crossover rate, and return them
@@ -136,7 +139,7 @@ chromosomes = generate_random_chromosomes(population, chromosome_length)
 
 done = False
 generation = 0
-while not done:
+while not done and generation < max_generations:
     
     total_fitness = 0.0
     
@@ -147,6 +150,7 @@ while not done:
 
         if int(chromo.result) == target:
             print('Found a solution!')
+            print('Generation:', generation)
             print('Chromosome {0}: {1}'.format(index, chromo.body))
             print('Equation:', chromo.equation)
             print('Result:', chromo.result)
@@ -157,26 +161,31 @@ while not done:
         chromo.fitness = abs(1.0 / (target - chromo.result))
         total_fitness += chromo.fitness
 
-    if generation % 100 == 0:
-        # Find best chromosome
-        best_chromo = sorted(chromosomes, key=operator.attrgetter('fitness'), reverse=True)[0]
-        print('Generation:', generation)
-        print('Best chromosome:', best_chromo.body)
-        print('Equation:', best_chromo.equation)
-        print('Result:', best_chromo.result)
-        print('Fitness score:', best_chromo.fitness)
-        print()
+    if done:
+        break
+    
+    # Find best chromosome
+    best_chromo = sorted(chromosomes, key=operator.attrgetter('fitness'), reverse=True)[0]
+    print('Generation:', generation)
+    print('Best chromosome:', best_chromo.body)
+    print('Equation:', best_chromo.equation)
+    print('Result:', best_chromo.result)
+    print('Fitness score:', best_chromo.fitness)
+    print()
 
-    pop = 0
-    while pop < population:
+    i = 0
+    new_chromosomes = []
+    while i < population:
         offspring1 = roulette_select(chromosomes, total_fitness)
         offspring2 = roulette_select(chromosomes, total_fitness)
 
         offspring1, offspring2 = crossover(offspring1, offspring2)
 
-        chromosomes[pop] = offspring1
-        pop += 1
-        chromosomes[pop] = offspring2
-        pop += 1
+        new_chromosomes.append(offspring1)
+        i += 1
+        new_chromosomes.append(offspring2)
+        i += 1
+        
+    chromosomes = new_chromosomes
     
     generation += 1
